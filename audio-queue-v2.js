@@ -1,0 +1,6 @@
+class Continuous extends AudioWorkletProcessor {
+constructor(){super();this.q=[];this.offset=0;this.total=0;this.played=0;this.started=false;this.final=false;this.gain=0;this.gaps=0;this.tick=0;this.port.onmessage=e=>{const d=e.data;if(d.type==='chunk'){this.q.push(d.channels);this.total+=d.channels[0].length;}if(d.type==='final')this.final=true;};}
+process(inputs,outputs){const out=outputs[0];if(!out.length)return true;const n=out[0].length;if(!this.started&&(this.total>=sampleRate*30||(this.final&&this.total>0)))this.started=true;
+for(let i=0;i<n;i++){if(this.started&&this.total>0){const a=this.q[0];this.gain=Math.min(1,this.gain+1/(sampleRate*.02));const tail=this.final?Math.min(1,this.total/(sampleRate*.02)):1;for(let c=0;c<out.length;c++)out[c][i]=a[c%a.length][this.offset]*this.gain*tail;this.offset++;this.total--;this.played++;if(this.offset===a[0].length){this.q.shift();this.offset=0;}}else{for(const ch of out)ch[i]=0;if(this.started&&!this.final){this.gaps++;this.started=false;this.gain=0;}}}
+if(++this.tick>=Math.ceil(sampleRate/n/4)){this.tick=0;this.port.postMessage({played:this.played/sampleRate,buffer:this.total/sampleRate,gaps:this.gaps,done:this.final&&this.total===0});}return true;}
+}registerProcessor('continuous-audio',Continuous);
