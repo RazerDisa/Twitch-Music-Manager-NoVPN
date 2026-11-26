@@ -1,0 +1,5 @@
+{
+  "name": "twitch-music-novpn",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-26"
+}
